@@ -14,7 +14,9 @@ import cadquery as cq
 
 HERE = Path(__file__).parent
 COLORS = {"body": (0.85, 0.87, 0.88), "hub": (0.25, 0.27, 0.3), "tyre": (0.08, 0.08, 0.08),
-          "blade": (0.15, 0.17, 0.2)}
+          "blade": (0.15, 0.17, 0.2), "engine": (0.77, 0.34, 0.16), "gearbox": (0.31, 0.42, 0.23),
+          "fuel": (0.85, 0.64, 0.0), "seat": (0.24, 0.35, 0.5), "shaft": (0.42, 0.46, 0.5),
+          "panel": (0.17, 0.2, 0.22)}
 
 
 def superellipse(sec, n=24, e=2.6):
@@ -38,6 +40,12 @@ def cyl(part):
     d = cq.Vector(*direction)
     base = cq.Vector(*part["p"]) - d * (part["len"] / 2)
     return cq.Workplane().add(cq.Solid.makeCylinder(part["r"], part["len"], base, d))
+
+
+def rod(part):
+    a, b = cq.Vector(*part["a"]), cq.Vector(*part["b"])
+    d = b - a
+    return cq.Workplane().add(cq.Solid.makeCylinder(part["r"], d.Length, a, d.normalized()))
 
 
 def box(part):
@@ -81,6 +89,13 @@ def build(concept):
         add(cyl(p), p["name"], p["color"])
     for p in g["boxes"]:
         add(box(p), p["name"], p["color"])
+    internals = g.get("internals", {})
+    for p in internals.get("boxes", []):
+        add(box(p), p["name"], p["color"])
+    for p in internals.get("cyls", []):
+        add(cyl(p), p["name"], p["color"])
+    for p in internals.get("rods", []):
+        add(rod(p), p["name"], p["color"])
     for rot in g["rotors"]:
         for i, b in enumerate(rotor_blades(rot)):
             add(b, f"{rot['name']}_blade{i + 1}", "blade")

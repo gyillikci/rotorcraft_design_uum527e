@@ -214,6 +214,70 @@
         rootCut: 0.12, dir: -1, rpmScale: 1, phase: 180 / s.Nb });
     }
 
+    // ------------------------------------------------ internal layout
+    const internals = { boxes: [], cyls: [], rods: [] };
+    const ib = (name, color, p, size) => internals.boxes.push({ name, color, p, size });
+    const zFloor = zb + 0.35;                       // cabin floor (under-floor fuel bay below)
+
+    // fuel tanks: under-floor cells first, then sponson tanks, then an aft tank
+    const fuelVol = (s.fuel / 800) * 1.08;          // m^3 (Jet A-1 0.8 kg/L, +8 % ullage/unusable)
+    const tankW = cabin.W - 0.2, tankL = cabin.L - 0.3;
+    const hUnder = Math.min(0.24, fuelVol / (tankW * tankL));
+    let remaining = fuelVol - hUnder * tankW * tankL;
+    const cellL = tankL / 2 - 0.04;
+    for (const k of [0, 1]) {
+      ib(`fuel_tank_floor_${k + 1}`, "fuel", [xc0 + 0.15 + cellL / 2 + k * (cellL + 0.08), 0, zb + 0.06 + hUnder / 2], [cellL, tankW, hUnder]);
+    }
+    const tanks = { underFloor: fuelVol - remaining, sponson: 0, aft: 0 };
+    if (remaining > 0.01) {
+      const spCap = 2 * (2.2 * 0.5 * 0.42);
+      const v = Math.min(remaining, spCap), h = Math.max(0.08, (v / 2) / (2.2 * 0.5));
+      for (const sgn of [-1, 1]) ib(sgn < 0 ? "fuel_tank_sponson_port" : "fuel_tank_sponson_stbd", "fuel", [xMain, sgn * ySp, zb + 0.02 + h / 2], [2.2, 0.5, h]);
+      tanks.sponson = v; remaining -= v;
+    }
+    if (remaining > 0.01) {
+      const w = 0.55 * Wf, h = 0.5 * Hf, L = remaining / (w * h);
+      ib("fuel_tank_aft", "fuel", [xc1 + 0.1 + L / 2, 0, zc - 0.05], [L, w, h]);
+      tanks.aft = remaining;
+    }
+
+    // seats: passengers forward-facing, 4 (or 3) abreast at 0.80 m pitch, plus 2 pilots
+    const perRow = fourAbreast ? 4 : 3;
+    for (let i = 0; i < pax; i++) {
+      const row = Math.floor(i / perRow), col = i % perRow;
+      const x = xc0 + 0.4 + row * 0.8, y = (col - (perRow - 1) / 2) * 0.52;
+      ib(`seat_pax_${i + 1}`, "seat", [x, y, zFloor + 0.42], [0.46, 0.46, 0.1]);
+      ib(`seat_pax_${i + 1}_back`, "seat", [x + 0.25, y, zFloor + 0.76], [0.08, 0.46, 0.6]);
+    }
+    for (const sgn of [-1, 1]) {
+      const y = sgn * Math.min(0.5, Wf / 2 - 0.45);
+      ib(sgn < 0 ? "seat_pilot_left" : "seat_pilot_right", "seat", [1.85, y, zFloor + 0.4], [0.5, 0.5, 0.12]);
+      ib(sgn < 0 ? "seat_pilot_left_back" : "seat_pilot_right_back", "seat", [2.13, y, zFloor + 0.8], [0.1, 0.5, 0.75]);
+    }
+    ib("instrument_panel", "panel", [1.15, 0, zb + 1.05], [0.25, 0.8 * Wf, 0.45]);
+
+    // main gearbox under the mast; two turboshafts aft of it
+    const mgbH = s.concept === "coax" ? 0.72 : 0.66;
+    ib("main_gearbox", "gearbox", [xh, 0, zDeck + mgbH / 2 - 0.02], [1.05, 0.85, mgbH]);
+    const Peng = s.Pinst / 2 / 1000;                // kW per engine (take-off rating)
+    const rEng = Math.min(0.32, 0.16 * Math.sqrt(Peng / 500));
+    const lEng = 1.25 * Math.pow(Peng / 1000, 0.35);
+    const xEng = xh + 0.55 + 0.25 + lEng / 2;
+    const yEng = rEng + 0.12;
+    for (const sgn of [-1, 1]) {
+      const nm = sgn < 0 ? "port" : "stbd";
+      internals.cyls.push({ name: `engine_${nm}`, color: "engine", p: [xEng, sgn * yEng, zDeck + 0.06 + rEng], axis: "x", r: rEng, len: lEng });
+      internals.rods.push({ name: `engine_input_shaft_${nm}`, color: "shaft", r: 0.05,
+        a: [xEng - lEng / 2, sgn * yEng, zDeck + 0.06 + rEng], b: [xh + 0.5, sgn * 0.2, zDeck + 0.3] });
+    }
+    if (s.concept === "single") {
+      const kink = [xTR - 0.9, 0, zTR - 1.3];
+      internals.rods.push({ name: "tail_drive_shaft", color: "shaft", r: 0.05, a: [xh + 0.5, 0, zDeck + 0.25], b: kink });
+      internals.rods.push({ name: "tail_drive_shaft_fin", color: "shaft", r: 0.045, a: kink, b: [xTR, 0, zTR] });
+      ib("intermediate_gearbox", "gearbox", kink, [0.28, 0.24, 0.24]);
+      ib("tail_gearbox", "gearbox", [xTR, -0.05, zTR], [0.34, 0.3, 0.3]);
+    }
+
     const xMin = Math.min(0, xh - R);
     const xMax = Math.max(xEnd, xh + R, xTR !== null ? xTR + Rtr : -Infinity);
     const zMax = Math.max(zTop + 0.2, zTR !== null ? zTR + Rtr : 0);
@@ -226,8 +290,9 @@
       hubHeight: zh,
       cabin,
       xh, zh, zTop, xEnd, xTR, zTR, Rtr, Wf, Hf, zb, xMin, xMax,
+      fuelVolume: fuelVol, tanks, engine: { P_kW: Peng, r: rEng, L: lEng },
     }, extra);
-    return { lofts, cyls, boxes, rotors, dims };
+    return { lofts, cyls, boxes, rotors, internals, dims };
   }
 
   const api = { size, powerRequired, CONCEPTS, ASSUME, KT, G };

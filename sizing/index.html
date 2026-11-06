@@ -8,16 +8,17 @@
 :root {
   --bg: #eef2f1; --panel: #ffffff; --ink: #15212a; --muted: #586974; --rule: #cbd5d9; --soft: #e4ebec;
   --c-single: #1c6ea4; --c-coax: #9c2f6c; --warn: #9a6400; --viewer-bg: #e3e9ea; --grid: #b9c6cb; --body3d: #d8dde0;
+  --i-engine: #c4572a; --i-gearbox: #4f6b3a; --i-fuel: #d9a400; --i-seat: #3d5a80; --i-shaft: #6b7680; --i-panel: #2b3238;
   --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
   --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0f151a; --panel: #161f26; --ink: #e2e9ed; --muted: #8fa1ac; --rule: #2a3742; --soft: #1d2831;
-  --c-single: #5fb3ea; --c-coax: #e27fb3; --warn: #e0a740; --viewer-bg: #121a20; --grid: #2c3a44; --body3d: #aab4ba; color-scheme: dark } }
+  --c-single: #5fb3ea; --c-coax: #e27fb3; --warn: #e0a740; --viewer-bg: #121a20; --grid: #2c3a44; --body3d: #aab4ba; --i-engine: #ec7d4f; --i-gearbox: #8db06f; --i-fuel: #f2c12e; --i-seat: #7fa6d6; --i-shaft: #a3adb6; --i-panel: #59636b; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0f151a; --panel: #161f26; --ink: #e2e9ed; --muted: #8fa1ac; --rule: #2a3742; --soft: #1d2831;
-  --c-single: #5fb3ea; --c-coax: #e27fb3; --warn: #e0a740; --viewer-bg: #121a20; --grid: #2c3a44; --body3d: #aab4ba; color-scheme: dark }
+  --c-single: #5fb3ea; --c-coax: #e27fb3; --warn: #e0a740; --viewer-bg: #121a20; --grid: #2c3a44; --body3d: #aab4ba; --i-engine: #ec7d4f; --i-gearbox: #8db06f; --i-fuel: #f2c12e; --i-seat: #7fa6d6; --i-shaft: #a3adb6; --i-panel: #59636b; color-scheme: dark }
 
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
 .wrap { max-width: 1280px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
@@ -49,6 +50,8 @@ input[type=range] { width: 100%; accent-color: var(--ink); }
 .vbar button:focus-visible { outline: 2px solid var(--c-single); outline-offset: 1px; }
 .vbar .sp { flex: 1; }
 .vnote { position: absolute; left: 12px; bottom: 10px; right: 12px; font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); pointer-events: none; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.ilegend { position: absolute; right: 12px; top: 50px; display: grid; gap: 3px; font-family: var(--f-mono); font-size: 11.5px; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; padding: 6px 9px; pointer-events: none; }
+@media (max-width: 560px) { .ilegend { top: auto; bottom: 64px; } }
 .key { display: inline-flex; align-items: center; gap: 6px; }
 .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 
@@ -112,8 +115,10 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
         <span class="sp"></span>
         <button type="button" id="spin" aria-pressed="true">Rotors turning</button>
         <button type="button" id="discs" aria-pressed="false">Rotor discs</button>
+        <button type="button" id="xray" aria-pressed="true">See-through</button>
       </div>
       <div class="vnote" id="vnote"></div>
+      <div class="ilegend" id="ilegend"><span class="key"><span class="sw" style="background:var(--i-engine)"></span>Engines</span><span class="key"><span class="sw" style="background:var(--i-gearbox)"></span>Gearboxes</span><span class="key"><span class="sw" style="background:var(--i-shaft)"></span>Drive shafts</span><span class="key"><span class="sw" style="background:var(--i-fuel)"></span>Fuel tanks</span><span class="key"><span class="sw" style="background:var(--i-seat)"></span>Seats</span></div>
     </div>
 
     <div class="sheet">
@@ -128,7 +133,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
   </section>
 
   <section class="sheet ga">
-    <div class="sheet-head"><h2>General arrangement</h2><small>Third-angle projection · dimensions in m · not to scale</small></div>
+    <div class="sheet-head"><h2>General arrangement</h2><small>Third-angle projection · dimensions in m · not to scale · dashed = internal equipment</small></div>
     <div id="ga"></div>
   </section>
 
@@ -139,6 +144,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
       <div><h3>Rotor</h3><p>Disk loading DL = 6.0·W<sup>0.23</sup> kg/m², fitted to the AW139 and S-92. Tip speed 215 m/s, blade loading C<sub>T</sub>/σ = 0.08. Five blades for the single rotor and 4 + 4 for the coaxial. Tail rotor diameter is 0.195 D. Coaxial rotor spacing is 0.09 D.</p></div>
       <div><h3>Power</h3><p>Momentum theory for induced power (κ = 1.15), profile power with C<sub>d0</sub> = 0.010 and the (1 + 4.65μ²) term, and parasite power from flat-plate area f = 0.0035·W<sup>2/3</sup> m². Coaxial: 1.16 interference factor in hover, and 30 % more f for the twin hubs and mast. The tail rotor takes about 11 % of main-rotor power in hover, less in cruise.</p></div>
       <div><h3>Engines, fuel, speed</h3><ul><li>Installed power is 1.6 × hover power (twin-engine, OEI margin).</li><li>SFC is 0.30 kg/kWh, with a 30-minute reserve.</li><li>Maximum speed is whichever is lower: the speed where power required meets maximum continuous power, or the rotor limit.</li><li>Lift-offset rotors and pusher-propeller compounds are not modelled.</li></ul></div>
+      <div><h3>Internal layout</h3><p>Seats are forward-facing at 0.80 m pitch, 4 abreast (3 abreast for 8 passengers or fewer), on a floor 0.35 m above the belly. Fuel goes in under-floor cells first (up to 0.24 m deep), then sponson tanks, then an aft tank, at 0.8 kg/L plus 8 % ullage. The main gearbox sits under the mast, with two turboshafts behind it scaled from the take-off rating. The main + tail rotor layout adds a tail drive shaft with intermediate and tail gearboxes.</p></div>
       <div><h3>CAD files</h3><p>STEP and STL models of the baseline (16 passengers, 800 km, 145 kt) are in <code>cad/out/</code> in the repository. To regenerate them for other requirements, run <code>node sizing/run_sizing.js 16 800 145</code> and then <code>python3 cad/build_cad.py</code>.</p></div>
     </div>
   </section>
@@ -156,7 +162,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
   const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const state = { concept: "single", pax: 16, rangeKm: 800, cruiseKt: 145, view: "iso", spin: !reduceMotion, discs: false };
+  const state = { concept: "single", pax: 16, rangeKm: 800, cruiseKt: 145, view: "iso", spin: !reduceMotion, discs: false, xray: true };
   let results = {};
 
   // ------------------------------------------------------------------ inputs
@@ -184,6 +190,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
       ["Empty weight", "kg", (s) => s.We, f0, true],
       ["Fuel", "kg", (s) => s.fuel, f0, true],
       ["Payload + crew", "kg", (s) => s.Wpay + s.Wcrew, f0],
+      ["Fuel tank volume", "m³", (s) => s.geometry.dims.fuelVolume, f2, true],
       ["grp", "Rotor"],
       ["Main rotor diameter", "m", (s) => s.D, f2, true],
       ["Disk loading", "kg/m²", (s) => s.DL, f1],
@@ -195,6 +202,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
       ["grp", "Power and speed"],
       ["Hover power (OGE)", "kW", (s) => s.Phov / 1e3, f0, true],
       ["Installed power (2 eng.)", "kW", (s) => s.Pinst / 1e3, f0, true],
+      ["Engine envelope Ø × L", "m", (s) => { const e = s.geometry.dims.engine; return f2(2 * e.r) + " × " + f2(e.L); }, (v) => v],
       ["Max level speed", "kt", (s) => s.Vmax / KT, f0],
       ["Speed limited by", "", (s) => limiter(s), (v) => v],
       ["Power-limited speed", "kt", (s) => s.Vpower / KT, f0],
@@ -284,6 +292,20 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
     return d + (closed ? "Z" : "");
   }
 
+  // internals as hidden detail: coloured dashed outlines, light tint
+  function internalsSVG(I, proj, ia, ib) {
+    let o = "";
+    const st = (c) => `fill="var(--i-${c})" fill-opacity="0.18" stroke="var(--i-${c})" stroke-width="0.035" stroke-dasharray="0.18 0.09"`;
+    const rect = (p, sz, c) => {
+      const [x0, y0] = proj([p[0] - sz[0] / 2, p[1] - sz[1] / 2, p[2] - sz[2] / 2]);
+      const [x1, y1] = proj([p[0] + sz[0] / 2, p[1] + sz[1] / 2, p[2] + sz[2] / 2]);
+      return `<rect x="${Math.min(x0, x1).toFixed(3)}" y="${Math.min(y0, y1).toFixed(3)}" width="${Math.abs(x1 - x0).toFixed(3)}" height="${Math.abs(y1 - y0).toFixed(3)}" ${st(c)}/>`;
+    };
+    for (const b of I.boxes) o += rect(b.p, b.size, b.color);
+    for (const c of I.cyls) o += rect(c.p, [c.len, 2 * c.r, 2 * c.r], c.color);
+    for (const r of I.rods) { const [x1, y1] = proj(r.a), [x2, y2] = proj(r.b); o += `<line x1="${x1.toFixed(3)}" y1="${y1.toFixed(3)}" x2="${x2.toFixed(3)}" y2="${y2.toFixed(3)}" stroke="var(--i-${r.color})" stroke-width="0.06" stroke-dasharray="0.18 0.09"/>`; }
+    return o;
+  }
   function gaSVG(s) {
     const g = s.geometry, d = g.dims;
     const col = `var(--c-${s.concept})`;
@@ -347,6 +369,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
         plan += line(PX(r.hub[0] - r.R), PY(r.hub[1]), PX(r.hub[0] + r.R), PY(r.hub[1]), rot);
       }
     }
+    plan += internalsSVG(g.internals, (p) => [PX(p[0]), PY(p[1])], 0, 1);
     plan += line(PX(d.xMin) - 0.6, PY(0), PX(d.xMax) + 0.6, PY(0), cl);
     // plan dims
     plan += dimV(PY(-d.D / 2), PY(d.D / 2), PX(d.xh), PX(d.xMin) - 1.2, "Ø" + f2(d.D));
@@ -376,6 +399,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
       if (r.axis === "z") side += `<rect x="${PX(r.hub[0] - r.R)}" y="${SZ(r.hub[2] + 0.06)}" width="${2 * r.R}" height="0.12" fill="${col}" opacity="${r.dir < 0 ? 0.6 : 0.95}"/>`;
       else side += `<circle cx="${PX(r.hub[0])}" cy="${SZ(r.hub[2])}" r="${r.R}" fill="none" stroke="${col}" stroke-width="${thin * 1.4}" stroke-dasharray="0.3 0.18"/>`;
     }
+    side += internalsSVG(g.internals, (p) => [PX(p[0]), SZ(p[2])], 0, 2);
     side += line(PX(d.xh), SZ(0) + 0.4, PX(d.xh), SZ(d.zTop) - 0.5, cl);
     side += dimH(PX(d.xMin), PX(d.xMax), SZ(0), SZ(0) + 1.3, "D-value " + f2(d.Dvalue));
     side += dimV(SZ(0), SZ(d.overallHeight), PX(d.xMax), PX(d.xMax) + 1.0, "H " + f2(d.overallHeight));
@@ -458,6 +482,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
     mats.body = new THREE.MeshStandardMaterial({ color: 0xd8dde0, metalness: 0.1, roughness: 0.55 });
     mats.hub = new THREE.MeshStandardMaterial({ color: 0x3a4148, metalness: 0.5, roughness: 0.4 });
     mats.tyre = new THREE.MeshStandardMaterial({ color: 0x1b1d1f, roughness: 0.9 });
+    for (const k of ["engine", "gearbox", "fuel", "seat", "shaft", "panel"]) mats[k] = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: k === "engine" || k === "shaft" ? 0.45 : 0.1, roughness: 0.5 });
     mats.blade = { single: new THREE.MeshStandardMaterial({ color: 0x1c6ea4, roughness: 0.45, side: THREE.DoubleSide }),
                    coax: new THREE.MeshStandardMaterial({ color: 0x9c2f6c, roughness: 0.45, side: THREE.DoubleSide }) };
     mats.disc = { single: new THREE.MeshBasicMaterial({ color: 0x1c6ea4, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }),
@@ -471,10 +496,17 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
     if (!webglOK) return;
     scene.background = new THREE.Color(css("--viewer-bg") || "#e3e9ea");
     mats.body.color.set(css("--body3d") || "#d8dde0");
+    for (const k of ["engine", "gearbox", "fuel", "seat", "shaft", "panel"]) mats[k].color.set(css("--i-" + k));
+    setXray();
     mats.blade.single.color.set(css("--c-single")); mats.blade.coax.color.set(css("--c-coax"));
     mats.disc.single.color.set(css("--c-single")); mats.disc.coax.color.set(css("--c-coax"));
     if (gridHelper) { scene.remove(gridHelper); gridHelper = null; }
     buildGround();
+  }
+  function setXray() {
+    mats.body.transparent = state.xray; mats.body.opacity = state.xray ? 0.2 : 1; mats.body.depthWrite = !state.xray;
+    mats.body.needsUpdate = true;
+    $("ilegend").hidden = !state.xray;
   }
   function resize() {
     if (!webglOK) return;
@@ -509,7 +541,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
 
   function buildAircraft(s, off) {
     const grp = new THREE.Group(), g = s.geometry;
-    for (const L of g.lofts) { const m = new THREE.Mesh(loftGeometry(L, off), mats.body); m.material.side = THREE.DoubleSide; grp.add(m); }
+    for (const L of g.lofts) { const m = new THREE.Mesh(loftGeometry(L, off), mats.body); m.material.side = THREE.DoubleSide; m.renderOrder = 2; grp.add(m); }
     for (const c of g.cyls) {
       const m = new THREE.Mesh(new THREE.CylinderGeometry(c.r, c.r, c.len, 28), mats[c.color] || mats.body);
       m.position.copy(V3(c.p[0], c.p[1], c.p[2], off));
@@ -518,7 +550,24 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
     }
     for (const b of g.boxes) {
       const m = new THREE.Mesh(new THREE.BoxGeometry(b.size[0], b.size[2], b.size[1]), mats.body);
-      m.position.copy(V3(b.p[0], b.p[1], b.p[2], off)); grp.add(m);
+      m.position.copy(V3(b.p[0], b.p[1], b.p[2], off)); m.renderOrder = 2; grp.add(m);
+    }
+    const I = g.internals;
+    for (const b of I.boxes) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(b.size[0], b.size[2], b.size[1]), mats[b.color]);
+      m.position.copy(V3(b.p[0], b.p[1], b.p[2], off)); m.renderOrder = -1; grp.add(m);
+    }
+    for (const c of I.cyls) {
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(c.r, c.r * 0.85, c.len, 28), mats[c.color]);
+      m.position.copy(V3(c.p[0], c.p[1], c.p[2], off)); m.rotation.z = Math.PI / 2; grp.add(m);
+    }
+    for (const r of I.rods) {
+      const a = V3(r.a[0], r.a[1], r.a[2], off), b = V3(r.b[0], r.b[1], r.b[2], off);
+      const dir = b.clone().sub(a), len = dir.length();
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(r.r, r.r, len, 12), mats[r.color]);
+      m.position.copy(a.clone().add(b).multiplyScalar(0.5));
+      m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+      grp.add(m);
     }
     for (const r of g.rotors) {
       const holder = new THREE.Group();
@@ -614,6 +663,7 @@ code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); p
   $("spin").setAttribute("aria-pressed", String(state.spin));
   $("spin").addEventListener("click", () => { state.spin = !state.spin; $("spin").setAttribute("aria-pressed", String(state.spin)); });
   $("discs").addEventListener("click", () => { state.discs = !state.discs; $("discs").setAttribute("aria-pressed", String(state.discs)); discMeshes.forEach((m) => (m.visible = state.discs)); });
+  $("xray").addEventListener("click", () => { state.xray = !state.xray; $("xray").setAttribute("aria-pressed", String(state.xray)); if (webglOK) setXray(); });
   const onTheme = () => { applyTheme(); rebuild3D(); };
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", onTheme);
   new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
